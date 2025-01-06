@@ -113,7 +113,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
         } else {
           const profile = await getTokenProfile(args[0])
           setOutput(prev => [...prev, profile])
-          const analysis = await handleOpenAIQuery(`Analyze this token information: ${profile}`)
+          const analysis = await handleOpenAIQuery(profile, '!token_profile')
           setOutput(prev => [...prev, "Analysis:", analysis])
         }
         break
@@ -124,7 +124,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
         } else {
           const orders = await getTokenOrders(args[0], args[1])
           setOutput(prev => [...prev, orders])
-          const analysis = await handleOpenAIQuery(orders)
+          const analysis = await handleOpenAIQuery(orders, '!token_orders')
           setOutput(prev => [...prev, "Analysis:", analysis])
         }
         break
@@ -135,7 +135,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
         } else {
           const pairInfo = await getPairInfo(args[0], args[1])
           setOutput(prev => [...prev, pairInfo])
-          const analysis = await handleOpenAIQuery(pairInfo)
+          const analysis = await handleOpenAIQuery(pairInfo, '!pair_info')
           setOutput(prev => [...prev, "Analysis:", analysis])
         }
         break
@@ -153,7 +153,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
             setOutput(prev => [...prev, twitterInfo.formattedData]);
             
             // Send the formatted data to OpenAI for analysis
-            const analysis = await handleOpenAIQuery(`Analyze this Twitter username history: ${twitterInfo.formattedData}`);
+            const analysis = await handleOpenAIQuery(twitterInfo.formattedData, '!twitter_check');
             setOutput(prev => [...prev, "\nAnalysis:", analysis]);
           }
         }
@@ -175,7 +175,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
         break
 
       default:
-        const analysis = await handleOpenAIQuery(command);
+        const analysis = await handleOpenAIQuery(command, 'default');
         setOutput(prev => [...prev, analysis]);
     }
   }
@@ -197,16 +197,32 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
     }
   }
 
-  const handleOpenAIQuery = async (query: string) => {
+  const handleOpenAIQuery = async (query: string, command: string) => {
     try {
+      let prompt = '';
+      switch (command) {
+        case '!token_profile':
+          prompt = `Analyze the following token information, focusing on providing a short summary of what the coin is about. Based on the market cap and liquidity, determine the odds of the token being a rug pull or scam. Consider low liquidity and small market cap as potential red flags. ${query}`;
+          break;
+        case '!token_orders':
+          prompt = `Analyze the following token order information. Provide insights on the trading activity, liquidity, and any notable patterns. ${query}`;
+          break;
+        case '!pair_info':
+          prompt = `Analyze the following trading pair information. Discuss the relationship between the two tokens, liquidity, and any potential risks or opportunities. ${query}`;
+          break;
+        case '!twitter_check':
+          prompt = `Analyze the following Twitter username history. Identify any patterns in username changes, potential reasons for changes, and what this might indicate about the account. ${query}`;
+          break;
+        default:
+          prompt = `You are an AI assistant specializing in blockchain and cryptocurrency analysis. Please provide a helpful response to the following query: ${query}`;
+      }
+
       const response = await fetch('/api/openai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          prompt: `Analyze the following token information, focusing on providing a short summary of what the coin is about. Based on the market cap and liquidity, determine the odds of the token being a rug pull or scam. Consider low liquidity and small market cap as potential red flags. ${query}` 
-        }),
+        body: JSON.stringify({ prompt }),
       });
 
       if (!response.ok) {
