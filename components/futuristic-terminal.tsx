@@ -17,7 +17,8 @@ const HELP_MESSAGE = `Available commands:
 !check_balance [address] - Check SOL balance
 !network_status - Get Solana network status
 !gen_wallet - Generate a new SOL wallet
-!volume [token_address] - Check token volume and price
+!volume [token_address] - Check token volume
+!price [token_address] - Check token price
 !token_info [token_address] - Get token information
 !connect - Connect Phantom wallet
 !help - Show this help message
@@ -83,21 +84,27 @@ export function FuturisticTerminal({ isOpen, onClose }) {
       return
     }
 
-    if (commandInput.startsWith('!volume')) {
-      const address = command.substring('!volume'.length).trim()
+    if (commandInput.startsWith('!volume') || commandInput.startsWith('!price')) {
+      const address = command.substring(command.indexOf(' ') + 1).trim()
       if (!address) {
         setOutput(prev => [...prev, 'Please provide a token address'])
         return
       }
       const volumeData = await getTokenVolume(address)
       if (volumeData) {
-        setOutput(prev => [...prev,
-          `Token: ${volumeData.symbol}`,
-          `24h Volume: $${parseFloat(volumeData.volume24h).toLocaleString()}`,
-          `Price: $${parseFloat(volumeData.priceUsdt).toFixed(6)}`
-        ])
+        if (commandInput.startsWith('!volume')) {
+          setOutput(prev => [...prev,
+            `Token: ${volumeData.symbol}`,
+            `24h Volume: $${parseFloat(volumeData.volume24h).toLocaleString()}`
+          ])
+        } else {
+          setOutput(prev => [...prev,
+            `Token: ${volumeData.symbol}`,
+            `Price: $${parseFloat(volumeData.priceUsdt).toFixed(6)}`
+          ])
+        }
       } else {
-        setOutput(prev => [...prev, 'Error fetching token volume data'])
+        setOutput(prev => [...prev, 'Error fetching token data. Please check the address and try again.'])
       }
       return
     }
@@ -111,13 +118,13 @@ export function FuturisticTerminal({ isOpen, onClose }) {
       const tokenInfo = await getTokenInfo(address)
       if (tokenInfo) {
         setOutput(prev => [...prev,
-          `Token Name: ${tokenInfo.name}`,
-          `Symbol: ${tokenInfo.symbol}`,
-          `Decimals: ${tokenInfo.decimals}`,
-          `Total Supply: ${tokenInfo.supply}`
+          `Token Name: ${tokenInfo.name || 'N/A'}`,
+          `Symbol: ${tokenInfo.symbol || 'N/A'}`,
+          `Decimals: ${tokenInfo.decimals || 'N/A'}`,
+          `Total Supply: ${tokenInfo.supply || 'N/A'}`
         ])
       } else {
-        setOutput(prev => [...prev, 'Error fetching token information'])
+        setOutput(prev => [...prev, 'Error fetching token information. Please check the address and try again.'])
       }
       return
     }
