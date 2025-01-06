@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Send, Mic, Loader2, Wallet } from 'lucide-react'
+import { X, Send, Mic, Loader2, Wallet, Settings } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Keypair } from '@solana/web3.js'
+import { CredentialManager } from './credential-manager'
 
 const WELCOME_MESSAGE = `Welcome to Zariel AI Terminal!
 Type !help for a list of available commands.`
@@ -25,6 +26,7 @@ const HELP_MESSAGE = `Available commands:
 !bundler - Transaction bundling operations
 !security - Security analysis tools
 !help - Show this help message
+!credentials - Manage your credentials
 
 For any other queries, just type your question and I'll assist you.`
 
@@ -35,6 +37,7 @@ export function FuturisticTerminal({ isOpen, onClose }) {
   const [isRecording, setIsRecording] = useState(false)
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [showCredentialManager, setShowCredentialManager] = useState(false)
   const recognitionRef = useRef<any>(null)
   const outputRef = useRef<HTMLDivElement>(null)
 
@@ -49,6 +52,12 @@ export function FuturisticTerminal({ isOpen, onClose }) {
     
     if (commandInput === '!help') {
       setOutput(prev => [...prev, HELP_MESSAGE])
+      return
+    }
+
+    // Add a new command to show the credential manager
+    if (commandInput === '!credentials') {
+      setShowCredentialManager(true)
       return
     }
 
@@ -244,6 +253,15 @@ export function FuturisticTerminal({ isOpen, onClose }) {
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => setShowCredentialManager(true)}
+                  className="text-purple-300 border-purple-500/50"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Credentials
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={connectPhantomWallet}
                   disabled={isWalletConnected}
                   className="text-purple-300 border-purple-500/50"
@@ -256,44 +274,50 @@ export function FuturisticTerminal({ isOpen, onClose }) {
                 </Button>
               </div>
             </div>
-            <div ref={outputRef} className="h-80 p-4 overflow-y-auto font-mono text-sm text-purple-300/90 space-y-2">
-              {output.map((line, index) => (
-                <div key={index} style={{ whiteSpace: 'pre-wrap' }}>{line}</div>
-              ))}
-              {isProcessing && <div className="text-purple-300/90">Processing...</div>}
-            </div>
-            <div className="p-4 border-t border-purple-500/30 flex items-center gap-2">
-              <Input
-                type="text"
-                placeholder="Enter your command..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="flex-grow bg-purple-500/10 border-purple-500/30 text-purple-200"
-                onKeyPress={(e) => e.key === 'Enter' && !isProcessing && handleSend(input)}
-                disabled={isProcessing}
-              />
-              <Button 
-                onClick={() => handleSend(input)} 
-                className="bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50"
-                disabled={isProcessing}
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-              <div className="relative group">
-                <Button
-                  onClick={isRecording ? stopRecording : startRecording}
-                  className={`bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50 ${isRecording ? 'animate-pulse' : ''}`}
-                  disabled={isProcessing}
-                >
-                  {isRecording ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Mic className="w-4 h-4 mr-2" />
-                  )}
-                  {isRecording ? 'Recording...' : 'Voice'}
-                </Button>
-              </div>
-            </div>
+            {showCredentialManager ? (
+              <CredentialManager />
+            ) : (
+              <>
+                <div ref={outputRef} className="h-80 p-4 overflow-y-auto font-mono text-sm text-purple-300/90 space-y-2">
+                  {output.map((line, index) => (
+                    <div key={index} style={{ whiteSpace: 'pre-wrap' }}>{line}</div>
+                  ))}
+                  {isProcessing && <div className="text-purple-300/90">Processing...</div>}
+                </div>
+                <div className="p-4 border-t border-purple-500/30 flex items-center gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Enter your command..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    className="flex-grow bg-purple-500/10 border-purple-500/30 text-purple-200"
+                    onKeyPress={(e) => e.key === 'Enter' && !isProcessing && handleSend(input)}
+                    disabled={isProcessing}
+                  />
+                  <Button 
+                    onClick={() => handleSend(input)} 
+                    className="bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50"
+                    disabled={isProcessing}
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                  <div className="relative group">
+                    <Button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className={`bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50 ${isRecording ? 'animate-pulse' : ''}`}
+                      disabled={isProcessing}
+                    >
+                      {isRecording ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Mic className="w-4 h-4 mr-2" />
+                      )}
+                      {isRecording ? 'Recording...' : 'Voice'}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
         </motion.div>
       )}
