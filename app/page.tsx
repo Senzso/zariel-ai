@@ -19,7 +19,7 @@ const asciiArt = `
  .      IIYVVXMWMWMWMWMWMWMWMWMWMWMWMWMWMWxx...         .           .
      IWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMx..
    IIWMWMWMWMWMWMWMWBY%ZACH%AND%OWENMWMWMWMWMWMWMWMWMWMWMx..        .
-    ""MWMWMWMWMWM"""""""".  .:..   ."""""MWMWMWMWMWti.
+    ""MWMWMWMWMWM"""""""".  .:..   ."""""MWMWMWMWti.
  .     ""   . \`  .: . :. : .  . :.  .  . . .  """"MWMWMWMWMti=
         . .   :\` . :   .  .'.' '....xxxxx...,'. '   ' ."""YWMWMWMWMWMWMW+
      ; . \` .  . : . .' :  . ..XXXXXXXXXXXXXXXXXXXXx.    \`     . "YWMWMWMWMWMWMW
@@ -252,19 +252,14 @@ function VoiceInterface({ setIsTerminalOpen }) {
 function Features() {
   const features = [
     {
-      icon: <Twitter className="w-6 h-6" />,
-      title: "Social Media Automation",
-      description: "Post and engage across X, Instagram, and TikTok with voice commands"
+      icon: <Wallet className="w-6 h-6" />,
+      title: "Pump Bundler (Solana)",
+      description: "Bundles transactions for efficient and strategic token operations"
     },
     {
-      icon: <Shield className="w-6 h-6" />,
-      title: "Smart Contract Analysis",
-      description: "Instant rug pull detection and security analysis of smart contracts"
-    },
-    {
-      icon: <TrendingUp className="w-6 h-6" />,
-      title: "Market Intelligence",
-      description: "Real-time tracking of trending tokens and social sentiment"
+      icon: <BarChart2 className="w-6 h-6" />,
+      title: "Pump Volume Bot",
+      description: "Artificially increase the volume of your token"
     },
     {
       icon: <Wallet className="w-6 h-6" />,
@@ -272,9 +267,14 @@ function Features() {
       description: "Generate wallets, bundle transactions, and manage operations across chains"
     },
     {
-      icon: <BarChart2 className="w-6 h-6" />,
-      title: "Volume Analysis",
-      description: "Track and analyze trading volumes with artificial boosting detection"
+      icon: <Shield className="w-6 h-6" />,
+      title: "Rug Detection",
+      description: "Analyzes tokens, checks for past username changes, and assesses risk"
+    },
+    {
+      icon: <Twitter className="w-6 h-6" />,
+      title: "Social Media Automation",
+      description: "Post and engage across X, Instagram, and TikTok with voice commands"
     },
     {
       icon: <MessageSquare className="w-6 h-6" />,
