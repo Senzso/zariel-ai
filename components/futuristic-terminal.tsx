@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Keypair } from '@solana/web3.js'
 import { getTokenProfile, getTokenOrders, getPairInfo } from '@/utils/dexscreener'
-import { checkTwitterUsername } from '@/utils/twitter'
+import { checkTwitterUsername, postTweet, setTwitterToken } from '@/utils/twitter'
 
 const WELCOME_MESSAGE = `Welcome to Zariel AI Terminal!
 Type !help for a list of available commands.`
@@ -20,6 +20,8 @@ const HELP_MESSAGE = `Available commands:
 !twitter_check [username] - Check Twitter username history
 !gen_wallet - Generate a new SOL wallet
 !connect - Connect Phantom wallet
+!set_twitter_token [token] - Set your Twitter API bearer token
+!post [message] - Post a tweet on X (Twitter)
 !help - Show this help message
 
 For any other queries, just type your question and I'll assist you.`
@@ -32,6 +34,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [hasBeenOpened, setHasBeenOpened] = useState(false);
+  const [twitterToken, setTwitterToken] = useState('')
   const recognitionRef = useRef<any>(null)
   const outputRef = useRef<HTMLDivElement>(null)
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null)
@@ -172,6 +175,32 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
 
       case '!connect':
         await connectPhantomWallet()
+        break
+
+      case '!set_twitter_token':
+        if (args.length === 0) {
+          setOutput(prev => [...prev, 'Please provide your Twitter API bearer token'])
+        } else {
+          setTwitterToken(args[0])
+          setOutput(prev => [...prev, 'Twitter API bearer token has been set'])
+        }
+        break
+
+      case '!post':
+        if (args.length === 0) {
+          setOutput(prev => [...prev, 'Please provide the message you want to tweet'])
+        } else if (!twitterToken) {
+          setOutput(prev => [...prev, 'Please set your Twitter API bearer token first using !set_twitter_token'])
+        } else {
+          const tweetContent = args.join(' ')
+          try {
+            const result = await postTweet(twitterToken, tweetContent)
+            setOutput(prev => [...prev, `Tweet posted successfully! Tweet ID: ${result.data.id}`])
+          } catch (error) {
+            console.error('Error posting tweet:', error)
+            setOutput(prev => [...prev, `Error posting tweet: ${error.message}`])
+          }
+        }
         break
 
       default:

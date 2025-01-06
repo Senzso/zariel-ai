@@ -15,3 +15,26 @@ export async function checkTwitterUsername(username: string) {
   }
 }
 
+export async function setTwitterToken(token: string): Promise<void> {
+  // This function doesn't need to do anything as we're storing the token in the component state
+  // It's here for consistency and potential future use
+}
+
+export async function postTweet(token: string, message: string) {
+  const response = await fetch('https://api.twitter.com/2/tweets', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ text: message }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to post tweet');
+  }
+
+  return await response.json();
+}
+
