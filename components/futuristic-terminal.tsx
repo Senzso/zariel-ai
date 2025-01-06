@@ -7,23 +7,22 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Keypair } from '@solana/web3.js'
+import { getSolPrice, getTokenInfo, getTokenVolume, checkBalance, getNetworkStatus } from '@/utils/solana'
 
 const WELCOME_MESSAGE = `Welcome to Zariel AI Terminal!
 Type !help for a list of available commands.`
 
 const HELP_MESSAGE = `Available commands:
-!socialmedia - Manage social media accounts
-!smartcontractcheck - Check a Solana smart contract
-!market - Market analysis (Coming soon!)
-!wallet - Wallet operations (generate, connect)
-!volume - Check token volume
-!content - Generate content
-!ca - Get ZAI token contract address (Not available yet)
-!price - Check token prices
-!swap - Perform token swaps
+!sol_price - Get current SOL price
+!check_balance [address] - Check SOL balance
+!network_status - Get Solana network status
+!gen_wallet - Generate a new SOL wallet
+!volume [token_address] - Check token volume and price
+!token_info [token_address] - Get token information
 !connect - Connect Phantom wallet
+!help - Show this help message
 
-For any other queries, just type your question and I'll do my best to assist you.`
+For any other queries, just type your question and I'll assist you.`
 
 export function FuturisticTerminal({ isOpen, onClose }) {
   const { toast } = useToast()
@@ -32,7 +31,7 @@ export function FuturisticTerminal({ isOpen, onClose }) {
   const [isRecording, setIsRecording] = useState(false)
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<any>(null)
   const outputRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -41,6 +40,97 @@ export function FuturisticTerminal({ isOpen, onClose }) {
     }
   }, [output])
 
+  const handleCommand = async (command: string) => {
+    const commandInput = command.toLowerCase().trim()
+    
+    if (commandInput === '!help') {
+      setOutput(prev => [...prev, HELP_MESSAGE])
+      return
+    }
+
+    if (commandInput === '!sol_price') {
+      const response = await getSolPrice()
+      setOutput(prev => [...prev, response])
+      return
+    }
+
+    if (commandInput.startsWith('!check_balance')) {
+      const address = command.substring('!check_balance'.length).trim()
+      if (!address) {
+        setOutput(prev => [...prev, 'Please provide a wallet address'])
+        return
+      }
+      const response = await checkBalance(address)
+      setOutput(prev => [...prev, response])
+      return
+    }
+
+    if (commandInput === '!network_status') {
+      const response = await getNetworkStatus()
+      setOutput(prev => [...prev, response])
+      return
+    }
+
+    if (commandInput === '!gen_wallet') {
+      const newWallet = Keypair.generate()
+      const publicKey = newWallet.publicKey.toString()
+      const privateKey = Buffer.from(newWallet.secretKey).toString('hex')
+      setOutput(prev => [...prev,
+        'New wallet generated:',
+        `Public Key: ${publicKey}`,
+        `Private Key: ${privateKey}`,
+        'IMPORTANT: Save your private key securely. It will not be shown again.'])
+      return
+    }
+
+    if (commandInput.startsWith('!volume')) {
+      const address = command.substring('!volume'.length).trim()
+      if (!address) {
+        setOutput(prev => [...prev, 'Please provide a token address'])
+        return
+      }
+      const volumeData = await getTokenVolume(address)
+      if (volumeData) {
+        setOutput(prev => [...prev,
+          `Token: ${volumeData.symbol}`,
+          `24h Volume: $${parseFloat(volumeData.volume24h).toLocaleString()}`,
+          `Price: $${parseFloat(volumeData.priceUsdt).toFixed(6)}`
+        ])
+      } else {
+        setOutput(prev => [...prev, 'Error fetching token volume data'])
+      }
+      return
+    }
+
+    if (commandInput.startsWith('!token_info')) {
+      const address = command.substring('!token_info'.length).trim()
+      if (!address) {
+        setOutput(prev => [...prev, 'Please provide a token address'])
+        return
+      }
+      const tokenInfo = await getTokenInfo(address)
+      if (tokenInfo) {
+        setOutput(prev => [...prev,
+          `Token Name: ${tokenInfo.name}`,
+          `Symbol: ${tokenInfo.symbol}`,
+          `Decimals: ${tokenInfo.decimals}`,
+          `Total Supply: ${tokenInfo.supply}`
+        ])
+      } else {
+        setOutput(prev => [...prev, 'Error fetching token information'])
+      }
+      return
+    }
+
+    if (commandInput === '!connect') {
+      await connectPhantomWallet()
+      return
+    }
+
+    // If no command matches, send to OpenAI
+    await handleOpenAIQuery(command)
+  }
+
   const handleSend = async (text: string) => {
     if (text.trim()) {
       setInput('')
@@ -48,57 +138,13 @@ export function FuturisticTerminal({ isOpen, onClose }) {
       setIsProcessing(true)
 
       try {
-        if (text.startsWith('!')) {
-          await handleCommand(text.toLowerCase())
-        } else {
-          await handleOpenAIQuery(text)
-        }
+        await handleCommand(text)
       } catch (error) {
-        console.error('Error processing request:', error)
+        console.error('Error processing command:', error)
         setOutput(prev => [...prev, 'Error processing your request. Please try again.'])
       } finally {
         setIsProcessing(false)
       }
-    }
-  }
-
-  const handleCommand = async (command: string) => {
-    switch (command) {
-      case '!help':
-        setOutput(prev => [...prev, HELP_MESSAGE])
-        break
-      case '!socialmedia':
-        setOutput(prev => [...prev, 'Choose a platform: X or TikTok'])
-        break
-      case '!smartcontractcheck':
-        setOutput(prev => [...prev, 'Please enter a Solana contract address to check.'])
-        break
-      case '!market':
-        setOutput(prev => [...prev, 'Market analysis is coming soon!'])
-        break
-      case '!wallet':
-        handleWalletOperations()
-        break
-      case '!volume':
-        setOutput(prev => [...prev, 'Please enter a token address to check its volume.'])
-        break
-      case '!content':
-        setOutput(prev => [...prev, 'What kind of content would you like to generate?'])
-        break
-      case '!ca':
-        setOutput(prev => [...prev, 'ZAI token contract address is not available yet.'])
-        break
-      case '!price':
-        setOutput(prev => [...prev, 'Please enter the token addresses to check prices (comma-separated).'])
-        break
-      case '!swap':
-        setOutput(prev => [...prev, 'Please enter the input token, output token, and amount to swap.'])
-        break
-      case '!connect':
-        await connectPhantomWallet()
-        break
-      default:
-        setOutput(prev => [...prev, 'Unknown command. Type !help for a list of available commands.'])
     }
   }
 
@@ -112,43 +158,17 @@ export function FuturisticTerminal({ isOpen, onClose }) {
         body: JSON.stringify({ prompt: query }),
       })
 
-      let data
-      const responseText = await response.text()
-      try {
-        data = JSON.parse(responseText)
-      } catch (error) {
-        console.error('Error parsing JSON:', error)
-        console.error('Raw response:', responseText)
-        throw new Error(`Failed to parse response from server: ${responseText.slice(0, 100)}...`)
-      }
-
+      const data = await response.json()
+      
       if (!response.ok) {
         throw new Error(data.error || 'Failed to get response from OpenAI')
       }
 
       setOutput(prev => [...prev, data.response])
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error calling OpenAI API:', error)
       setOutput(prev => [...prev, `Error: ${error.message}`])
     }
-  }
-
-  const handleWalletOperations = () => {
-    setOutput(prev => [...prev, 'Wallet Operations:',
-      '1. Generate new wallet',
-      '2. Connect existing wallet',
-      'Enter the number of your choice:'])
-  }
-
-  const generateWallet = () => {
-    const newWallet = Keypair.generate()
-    const publicKey = newWallet.publicKey.toString()
-    const privateKey = Buffer.from(newWallet.secretKey).toString('hex')
-    setOutput(prev => [...prev,
-      'New wallet generated:',
-      `Public Key: ${publicKey}`,
-      `Private Key: ${privateKey}`,
-      'IMPORTANT: Save your private key securely. It will not be shown again.'])
   }
 
   const connectPhantomWallet = async () => {
