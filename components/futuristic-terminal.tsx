@@ -7,18 +7,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Keypair } from '@solana/web3.js'
-import { getSolPrice, getTokenInfo, getTokenVolume, checkBalance, getNetworkStatus } from '@/utils/solana'
+import { getTokenProfile, getTokenOrders, getPairInfo } from '@/utils/dexscreener'
+import { checkTwitterUsername } from '@/utils/twitter'
 
 const WELCOME_MESSAGE = `Welcome to Zariel AI Terminal!
 Type !help for a list of available commands.`
 
 const HELP_MESSAGE = `Available commands:
-!sol_price - Get current SOL price
-!check_balance [address] - Check SOL balance
-!network_status - Get Solana network status
+!token_profile [address] - Get token profile
+!token_orders [chainId] [address] - Get token orders
+!pair_info [chainId] [pairId] - Get pair information
+!twitter_check [username] - Check Twitter username history
 !gen_wallet - Generate a new SOL wallet
-!volume [token_address] - Check token volume and price
-!token_info [token_address] - Get token information
 !connect - Connect Phantom wallet
 !help - Show this help message
 
@@ -41,94 +41,90 @@ export function FuturisticTerminal({ isOpen, onClose }) {
   }, [output])
 
   const handleCommand = async (command: string) => {
-    const commandInput = command.toLowerCase().trim()
+    const [cmd, ...args] = command.toLowerCase().trim().split(' ')
     
-    if (commandInput === '!help') {
-      setOutput(prev => [...prev, HELP_MESSAGE])
-      return
-    }
+    switch (cmd) {
+      case '!help':
+        setOutput(prev => [...prev, HELP_MESSAGE])
+        break
 
-    if (commandInput === '!sol_price') {
-      const response = await getSolPrice()
-      setOutput(prev => [...prev, response])
-      return
-    }
+      case '!token_profile':
+        if (args.length === 0) {
+          setOutput(prev => [...prev, 'Please provide a token address'])
+        } else {
+          const profile = await getTokenProfile(args[0])
+          if (profile) {
+            setOutput(prev => [...prev, JSON.stringify(profile, null, 2)])
+          } else {
+            setOutput(prev => [...prev, 'Error fetching token profile'])
+          }
+        }
+        break
 
-    if (commandInput.startsWith('!check_balance')) {
-      const address = command.substring('!check_balance'.length).trim()
-      if (!address) {
-        setOutput(prev => [...prev, 'Please provide a wallet address'])
-        return
-      }
-      const response = await checkBalance(address)
-      setOutput(prev => [...prev, response])
-      return
-    }
+      case '!token_orders':
+        if (args.length < 2) {
+          setOutput(prev => [...prev, 'Please provide chainId and token address'])
+        } else {
+          const orders = await getTokenOrders(args[0], args[1])
+          if (orders) {
+            setOutput(prev => [...prev, JSON.stringify(orders, null, 2)])
+          } else {
+            setOutput(prev => [...prev, 'Error fetching token orders'])
+          }
+        }
+        break
 
-    if (commandInput === '!network_status') {
-      const response = await getNetworkStatus()
-      setOutput(prev => [...prev, response])
-      return
-    }
+      case '!pair_info':
+        if (args.length < 2) {
+          setOutput(prev => [...prev, 'Please provide chainId and pairId'])
+        } else {
+          const pairInfo = await getPairInfo(args[0], args[1])
+          if (pairInfo) {
+            setOutput(prev => [...prev, JSON.stringify(pairInfo, null, 2)])
+          } else {
+            setOutput(prev => [...prev, 'Error fetching pair info'])
+          }
+        }
+        break
 
-    if (commandInput === '!gen_wallet') {
-      const newWallet = Keypair.generate()
-      const publicKey = newWallet.publicKey.toString()
-      const privateKey = Buffer.from(newWallet.secretKey).toString('hex')
-      setOutput(prev => [...prev,
-        'New wallet generated:',
-        `Public Key: ${publicKey}`,
-        `Private Key: ${privateKey}`,
-        'IMPORTANT: Save your private key securely. It will not be shown again.'])
-      return
-    }
+      case '!twitter_check':
+        if (args.length === 0) {
+          setOutput(prev => [...prev, 'Please provide a Twitter username']);
+        } else {
+          const twitterInfo = await checkTwitterUsername(args[0]);
+          if ('error' in twitterInfo) {
+            setOutput(prev => [...prev, `Error: ${twitterInfo.error}`]);
+          } else if (!twitterInfo.formattedData) {
+            setOutput(prev => [...prev, 'No information found for this username.']);
+          } else {
+            setOutput(prev => [...prev, twitterInfo.formattedData]);
+            
+            // Send the formatted data to OpenAI for analysis
+            const analysis = await handleOpenAIQuery(twitterInfo.formattedData);
+            setOutput(prev => [...prev, "\nAnalysis:", analysis]);
+          }
+        }
+        break
 
-    if (commandInput.startsWith('!volume')) {
-      const address = command.substring('!volume'.length).trim()
-      if (!address) {
-        setOutput(prev => [...prev, 'Please provide a token address'])
-        return
-      }
-      const volumeData = await getTokenVolume(address)
-      if (volumeData) {
+      case '!gen_wallet':
+        const newWallet = Keypair.generate()
+        const publicKey = newWallet.publicKey.toString()
+        const privateKey = Buffer.from(newWallet.secretKey).toString('hex')
         setOutput(prev => [...prev,
-          `Token: ${volumeData.symbol}`,
-          `24h Volume: $${parseFloat(volumeData.volume24h).toLocaleString()}`,
-          `Price: $${parseFloat(volumeData.priceUsdt).toFixed(6)}`
-        ])
-      } else {
-        setOutput(prev => [...prev, 'Error fetching token volume data'])
-      }
-      return
-    }
+          'New wallet generated:',
+          `Public Key: ${publicKey}`,
+          `Private Key: ${privateKey}`,
+          'IMPORTANT: Save your private key securely. It will not be shown again.'])
+        break
 
-    if (commandInput.startsWith('!token_info')) {
-      const address = command.substring('!token_info'.length).trim()
-      if (!address) {
-        setOutput(prev => [...prev, 'Please provide a token address'])
-        return
-      }
-      const tokenInfo = await getTokenInfo(address)
-      if (tokenInfo) {
-        setOutput(prev => [...prev,
-          `Token Name: ${tokenInfo.name}`,
-          `Symbol: ${tokenInfo.symbol}`,
-          `Decimals: ${tokenInfo.decimals}`,
-          `Total Supply: ${tokenInfo.supply}`
-        ])
-      } else {
-        setOutput(prev => [...prev, 'Error fetching token information'])
-      }
-      return
-    }
+      case '!connect':
+        await connectPhantomWallet()
+        break
 
-    if (commandInput === '!connect') {
-      await connectPhantomWallet()
-      return
+      default:
+        const analysis = await handleOpenAIQuery(command);
+        setOutput(prev => [...prev, analysis]);
     }
-
-    // If no command matches, send to OpenAI
-    await handleOpenAIQuery(command)
   }
 
   const handleSend = async (text: string) => {
@@ -156,20 +152,20 @@ export function FuturisticTerminal({ isOpen, onClose }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ prompt: query }),
-      })
+      });
 
-      const data = await response.json()
-      
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to get response from OpenAI')
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
-      setOutput(prev => [...prev, data.response])
+      const data = await response.json();
+      return data.response;
     } catch (error: any) {
-      console.error('Error calling OpenAI API:', error)
-      setOutput(prev => [...prev, `Error: ${error.message}`])
+      console.error('Error calling OpenAI API:', error);
+      return `Error: ${error.message}`;
     }
-  }
+  };
 
   const connectPhantomWallet = async () => {
     if (typeof window.solana !== 'undefined') {
