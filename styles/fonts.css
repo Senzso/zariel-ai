@@ -1,0 +1,10 @@
+@font-face {
+  font-family: 'PixelFont';
+  src: url('/fonts/VT323-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+.font-pixel {
+  font-family: 'PixelFont', monospace;
+}
+

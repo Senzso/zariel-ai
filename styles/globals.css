@@ -1,0 +1,16 @@
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+.typing-animation {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typing 3s steps(40, end);
+}
+
+.font-mono {
+  font-family: 'Courier New', monospace;
+}
+
