@@ -10,22 +10,36 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.0.2",
-    "@solana/web3.js": "1.87.6",
-    "@types/node": "20.10.5",
-    "@types/react": "18.2.45",
-    "@types/react-dom": "18.2.18",
-    "@vercel/analytics": "1.1.1",
+    "@solana/web3.js": "^1.87.6",
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "@vercel/analytics": "^1.1.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
-    "framer-motion": "10.16.16",
-    "lucide-react": "0.298.0",
-    "next": "14.0.4",
-    "openai": "4.24.1",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "framer-motion": "^10.16.16",
+    "lucide-react": "^0.298.0",
+    "next": "^14.0.4",
+    "openai": "^4.24.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "rpc-websockets": "^7.5.1",
     "tailwind-merge": "^2.1.0",
-    "typescript": "5.3.3"
+    "typescript": "^5.3.3",
+    "superstruct": "^1.0.3",
+    "bn.js": "^5.2.1",
+    "borsh": "^0.7.0",
+    "bs58": "^5.0.0",
+    "buffer": "^6.0.3",
+    "cross-fetch": "^4.0.0",
+    "jayson": "^4.1.0",
+    "node-fetch": "^3.3.2",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6"
   }
 }
 
