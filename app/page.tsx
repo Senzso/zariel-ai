@@ -16,11 +16,11 @@ const asciiArt = `
             .         ..xxxxxxxxxx....               .       .             .
     .             MWMWMWWMWMWMWMWMWMWMW                       .
               IIIIMWMWMWMWMWMWMWMWMWMWMWMttii:        .           .
- .      IIYVVXMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWxx...         .           .
-     IWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMx..
-   IIWMWMWMWMWMWMWMWMWBY%ZACH%AND%OWENMWMWMWMWMWMWMWMWMWMWMx..        .
-    ""MWMWMWMWMWM"""""""".  .:..   ."""""MWMWMWMWMWMWMWMWti.
- .     ""   . \`  .: . :. : .  . :.  .  . . .  """"MWMWMWMWMWMWMWMti=
+ .      IIYVVXMWMWMWMWMWMWMWMWMWMWMWMWMWMWxx...         .           .
+     IWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMWMx..
+   IIWMWMWMWMWMWMWMWBY%ZACH%AND%OWENMWMWMWMWMWMWMWMWMWMWMx..        .
+    ""MWMWMWMWMWM"""""""".  .:..   ."""""MWMWMWMWMWti.
+ .     ""   . \`  .: . :. : .  . :.  .  . . .  """"MWMWMWMWMti=
         . .   :\` . :   .  .'.' '....xxxxx...,'. '   ' ."""YWMWMWMWMWMWMW+
      ; . \` .  . : . .' :  . ..XXXXXXXXXXXXXXXXXXXXx.    \`     . "YWMWMWMWMWMWMW
 .    .  .  .    . .   .  ..XXXXXXXXWWWWWWWWWWWWWWWWXXXX.  .     .     """""""
@@ -42,6 +42,7 @@ const asciiArt = `
 export default function Home() {
   const [entered, setEntered] = useState(false)
   const [isTerminalOpen, setIsTerminalOpen] = useState(false)
+  const [shouldSpeak, setShouldSpeak] = useState(false);
   const overviewRef = useRef<HTMLElement>(null)
   const featuresRef = useRef<HTMLElement>(null)
   const docsRef = useRef<HTMLElement>(null)
@@ -49,6 +50,11 @@ export default function Home() {
   const scrollToSection = (ref: React.RefObject<HTMLElement>) => {
     ref.current?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  const openTerminal = () => {
+    setIsTerminalOpen(true);
+    setShouldSpeak(true);
+  };
 
   return (
     <div className="min-h-screen bg-black/90 text-white">
@@ -112,6 +118,9 @@ export default function Home() {
               scrollToSection={scrollToSection}
               isTerminalOpen={isTerminalOpen}
               setIsTerminalOpen={setIsTerminalOpen}
+              shouldSpeak={shouldSpeak}
+              setShouldSpeak={setShouldSpeak}
+              openTerminal={openTerminal}
             />
           </motion.div>
         )}
@@ -120,7 +129,7 @@ export default function Home() {
   )
 }
 
-function MainContent({ overviewRef, featuresRef, docsRef, scrollToSection, isTerminalOpen, setIsTerminalOpen }) {
+function MainContent({ overviewRef, featuresRef, docsRef, scrollToSection, isTerminalOpen, setIsTerminalOpen, shouldSpeak, setShouldSpeak, openTerminal }) {
   const { toast, Toasts } = useToast()
 
   return (
@@ -156,7 +165,7 @@ function MainContent({ overviewRef, featuresRef, docsRef, scrollToSection, isTer
 
       <main className="mx-auto px-4 py-32 space-y-32 w-full max-w-[80%] relative z-20">
         <section ref={overviewRef}>
-          <Hero setIsTerminalOpen={setIsTerminalOpen} />
+          <Hero setIsTerminalOpen={openTerminal} />
         </section>
         <section ref={featuresRef}>
           <Features />
@@ -166,9 +175,15 @@ function MainContent({ overviewRef, featuresRef, docsRef, scrollToSection, isTer
         <section ref={docsRef}>
           <Documentation />
         </section>
-        <CTA setIsTerminalOpen={setIsTerminalOpen}/>
+        <CTA setIsTerminalOpen={openTerminal}/>
       </main>
-      <FuturisticTerminal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
+      <FuturisticTerminal 
+        isOpen={isTerminalOpen} 
+        onClose={() => setIsTerminalOpen(false)} 
+        onOpen={() => setShouldSpeak(true)}
+        shouldSpeak={shouldSpeak}
+        setShouldSpeak={setShouldSpeak}
+      />
       <Toasts />
     </div>
   )
@@ -224,7 +239,7 @@ function VoiceInterface({ setIsTerminalOpen }) {
         <div className="flex justify-center">
           <Button 
             className="bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50"
-            onClick={() => setIsTerminalOpen(true)}
+            onClick={setIsTerminalOpen}
           >
             Try Now
           </Button>
@@ -547,7 +562,7 @@ function CTA({ setIsTerminalOpen }) {
       </p>
       <Button 
         className="bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50 px-8 py-4 text-lg"
-        onClick={() => setIsTerminalOpen(true)}
+        onClick={setIsTerminalOpen}
       >
         Get Started Now
       </Button>

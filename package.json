@@ -60,8 +60,8 @@
     "zod": "^3.24.1",
     "framer-motion": "latest",
     "@solana/web3.js": "latest",
-    "tailwindcss": "latest",
-    "openai": "latest"
+    "openai": "latest",
+    "tailwindcss": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

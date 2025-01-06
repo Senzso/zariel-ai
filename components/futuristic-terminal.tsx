@@ -24,21 +24,90 @@ const HELP_MESSAGE = `Available commands:
 
 For any other queries, just type your question and I'll assist you.`
 
-export function FuturisticTerminal({ isOpen, onClose }) {
+export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setShouldSpeak }) {
   const { toast } = useToast()
   const [input, setInput] = useState('')
   const [output, setOutput] = useState<string[]>([WELCOME_MESSAGE])
   const [isRecording, setIsRecording] = useState(false)
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
   const recognitionRef = useRef<any>(null)
   const outputRef = useRef<HTMLDivElement>(null)
+  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null)
+
+  const selectFemaleVoice = () => {
+    if (speechSynthesisRef.current) {
+      const voices = speechSynthesisRef.current.getVoices();
+      const femaleVoice = voices.find(voice => voice.name === "Google UK English Female");
+      if (femaleVoice) {
+        console.log("Using female voice:", femaleVoice.name);
+      } else {
+        console.log("Female voice not found. Using default voice.");
+      }
+      return femaleVoice || null;
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      speechSynthesisRef.current = window.speechSynthesis;
+      
+      // Wait for voices to be loaded
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = selectFemaleVoice;
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = speechSynthesisRef.current?.getVoices() || [];
+      const femaleVoice = voices.find(voice => voice.name === "Google UK English Female");
+      if (femaleVoice) {
+        console.log("Female voice found:", femaleVoice.name);
+      } else {
+        console.log("Female voice not found. Available voices:", voices.map(v => v.name).join(", "));
+      }
+    };
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      speechSynthesisRef.current = window.speechSynthesis;
+      
+      // Load voices immediately
+      loadVoices();
+
+      // Also set up the onvoiceschanged event
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
 
   useEffect(() => {
     if (outputRef.current) {
       outputRef.current.scrollTop = outputRef.current.scrollHeight
     }
   }, [output])
+
+  useEffect(() => {
+    if (isOpen && shouldSpeak && output.length > 0 && speechSynthesisRef.current) {
+      const lastMessage = output[output.length - 1];
+      const utterance = new SpeechSynthesisUtterance(lastMessage);
+      const femaleVoice = selectFemaleVoice();
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+      speechSynthesisRef.current.cancel(); // Cancel any ongoing speech
+      speechSynthesisRef.current.speak(utterance);
+    }
+  }, [isOpen, shouldSpeak, output]);
+
+  useEffect(() => {
+    if (isOpen && !hasBeenOpened) {
+      setHasBeenOpened(true);
+      onOpen();
+    }
+  }, [isOpen, hasBeenOpened, onOpen]);
 
   const handleCommand = async (command: string) => {
     const [cmd, ...args] = command.toLowerCase().trim().split(' ')
@@ -53,11 +122,9 @@ export function FuturisticTerminal({ isOpen, onClose }) {
           setOutput(prev => [...prev, 'Please provide a token address'])
         } else {
           const profile = await getTokenProfile(args[0])
-          if (profile) {
-            setOutput(prev => [...prev, JSON.stringify(profile, null, 2)])
-          } else {
-            setOutput(prev => [...prev, 'Error fetching token profile'])
-          }
+          setOutput(prev => [...prev, profile])
+          const analysis = await handleOpenAIQuery(profile)
+          setOutput(prev => [...prev, "Analysis:", analysis])
         }
         break
 
@@ -66,11 +133,9 @@ export function FuturisticTerminal({ isOpen, onClose }) {
           setOutput(prev => [...prev, 'Please provide chainId and token address'])
         } else {
           const orders = await getTokenOrders(args[0], args[1])
-          if (orders) {
-            setOutput(prev => [...prev, JSON.stringify(orders, null, 2)])
-          } else {
-            setOutput(prev => [...prev, 'Error fetching token orders'])
-          }
+          setOutput(prev => [...prev, orders])
+          const analysis = await handleOpenAIQuery(orders)
+          setOutput(prev => [...prev, "Analysis:", analysis])
         }
         break
 
@@ -79,11 +144,9 @@ export function FuturisticTerminal({ isOpen, onClose }) {
           setOutput(prev => [...prev, 'Please provide chainId and pairId'])
         } else {
           const pairInfo = await getPairInfo(args[0], args[1])
-          if (pairInfo) {
-            setOutput(prev => [...prev, JSON.stringify(pairInfo, null, 2)])
-          } else {
-            setOutput(prev => [...prev, 'Error fetching pair info'])
-          }
+          setOutput(prev => [...prev, pairInfo])
+          const analysis = await handleOpenAIQuery(pairInfo)
+          setOutput(prev => [...prev, "Analysis:", analysis])
         }
         break
 

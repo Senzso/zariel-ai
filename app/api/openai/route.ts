@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: 'You are a Solana-chain crypto coin analyzer. Analyze the provided Twitter username history and provide insights about what it might mean for the associated token.' },
+        { role: 'system', content: 'You are a Solana-chain crypto coin analyzer. Analyze the provided token information and provide insights about what it might mean for the token.' },
         { role: 'user', content: prompt }
       ],
       max_tokens: 150,
