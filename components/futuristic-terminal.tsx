@@ -204,7 +204,9 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: query }),
+        body: JSON.stringify({ 
+          prompt: `Analyze the following token information, focusing on liquidity, market cap, volume, and price action. If available, comment on the distribution of top holders. ${query}` 
+        }),
       });
 
       if (!response.ok) {

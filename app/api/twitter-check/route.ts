@@ -19,9 +19,9 @@ export async function GET(request: Request) {
     
     // Format the data as a simple text
     let formattedData = `Twitter Username History for @${username}:\n\n`;
-    Object.entries(data).forEach(([date, handle]) => {
+    for (const [date, handle] of Object.entries(data)) {
       formattedData += `${date}: @${handle}\n`;
-    });
+    }
 
     return NextResponse.json({ formattedData });
   } catch (error) {

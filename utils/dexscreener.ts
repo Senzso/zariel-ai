@@ -20,6 +20,7 @@ Price: $${pair.priceUsd}
 24h Volume: $${pair.volume.h24}
 Market Cap: $${pair.fdv}
 Liquidity: $${pair.liquidity.usd}
+Holders: Data not available from DexScreener API
     `.trim();
   } catch (error) {
     console.error('Error fetching token profile:', error);
@@ -46,6 +47,7 @@ Quote Token: ${pair.quoteToken.name} (${pair.quoteToken.symbol})
 Price: $${pair.priceUsd}
 Liquidity: $${pair.liquidity.usd}
 Volume 24h: $${pair.volume.h24}
+Market Cap: $${pair.fdv}
     `.trim();
   } catch (error) {
     console.error('Error fetching pair info:', error);
@@ -54,6 +56,26 @@ Volume 24h: $${pair.volume.h24}
 }
 
 export async function getTokenOrders(chainId: string, tokenAddress: string): Promise<string> {
-  // ... (existing implementation)
+  try {
+    const response = await fetch(`${DEXSCREENER_API_BASE}/tokens/${chainId}/${tokenAddress}`);
+    const data = await response.json();
+    
+    if (!data || !data.pairs || data.pairs.length === 0) {
+      return 'No token orders found.';
+    }
+
+    const pair = data.pairs[0];
+    return `
+Token Orders:
+Symbol: ${pair.baseToken.symbol}
+Price: $${pair.priceUsd}
+24h Volume: $${pair.volume.h24}
+Liquidity: $${pair.liquidity.usd}
+Market Cap: $${pair.fdv}
+    `.trim();
+  } catch (error) {
+    console.error('Error fetching token orders:', error);
+    return 'Error fetching token orders';
+  }
 }
 
