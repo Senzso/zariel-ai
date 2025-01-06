@@ -40,11 +40,6 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
     if (speechSynthesisRef.current) {
       const voices = speechSynthesisRef.current.getVoices();
       const femaleVoice = voices.find(voice => voice.name === "Google UK English Female");
-      if (femaleVoice) {
-        console.log("Using female voice:", femaleVoice.name);
-      } else {
-        console.log("Female voice not found. Using default voice.");
-      }
       return femaleVoice || null;
     }
     return null;
@@ -65,11 +60,6 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
     const loadVoices = () => {
       const voices = speechSynthesisRef.current?.getVoices() || [];
       const femaleVoice = voices.find(voice => voice.name === "Google UK English Female");
-      if (femaleVoice) {
-        console.log("Female voice found:", femaleVoice.name);
-      } else {
-        console.log("Female voice not found. Available voices:", voices.map(v => v.name).join(", "));
-      }
     };
 
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -123,7 +113,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
         } else {
           const profile = await getTokenProfile(args[0])
           setOutput(prev => [...prev, profile])
-          const analysis = await handleOpenAIQuery(profile)
+          const analysis = await handleOpenAIQuery(`Analyze this token information: ${profile}`)
           setOutput(prev => [...prev, "Analysis:", analysis])
         }
         break
@@ -163,7 +153,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
             setOutput(prev => [...prev, twitterInfo.formattedData]);
             
             // Send the formatted data to OpenAI for analysis
-            const analysis = await handleOpenAIQuery(twitterInfo.formattedData);
+            const analysis = await handleOpenAIQuery(`Analyze this Twitter username history: ${twitterInfo.formattedData}`);
             setOutput(prev => [...prev, "\nAnalysis:", analysis]);
           }
         }
