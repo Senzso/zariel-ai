@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Keypair } from '@solana/web3.js'
 import { getTokenProfile, getTokenOrders, getPairInfo } from '@/utils/dexscreener'
-import { checkTwitterUsername, postTweet, setTwitterToken } from '@/utils/twitter'
+import { checkTwitterUsername, postTweet } from '@/utils/twitter'
+import { signIn, signOut, useSession } from "next-auth/react"
 
 const WELCOME_MESSAGE = `Welcome to Zariel AI Terminal!
 Type !help for a list of available commands.`
@@ -20,13 +21,14 @@ const HELP_MESSAGE = `Available commands:
 !twitter_check [username] - Check Twitter username history
 !gen_wallet - Generate a new SOL wallet
 !connect - Connect Phantom wallet
-!set_twitter_token [token] - Set your Twitter API bearer token
 !post [message] - Post a tweet on X (Twitter)
+!twitter_auth - Authenticate with Twitter
 !help - Show this help message
 
 For any other queries, just type your question and I'll assist you.`
 
 export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setShouldSpeak }) {
+ const { data: session, status } = useSession()
  const { toast } = useToast()
  const [input, setInput] = useState('')
  const [output, setOutput] = useState<string[]>([WELCOME_MESSAGE])
@@ -34,7 +36,6 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
  const [isWalletConnected, setIsWalletConnected] = useState(false)
  const [isProcessing, setIsProcessing] = useState(false)
  const [hasBeenOpened, setHasBeenOpened] = useState(false);
- const [twitterToken, setTwitterToken] = useState('')
  const recognitionRef = useRef<any>(null)
  const outputRef = useRef<HTMLDivElement>(null)
  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null)
@@ -177,35 +178,35 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
        await connectPhantomWallet()
        break
 
-     case '!set_twitter_token':
-       if (args.length === 0) {
-         setOutput(prev => [...prev, 'Please provide your Twitter API bearer token'])
-       } else {
-         setTwitterToken(args[0])
-         setOutput(prev => [...prev, 'Twitter API bearer token has been set'])
-       }
-       break
-
      case '!post':
        if (args.length === 0) {
          setOutput(prev => [...prev, 'Please provide the message you want to tweet'])
-       } else if (!twitterToken) {
-         setOutput(prev => [...prev, 'Please set your Twitter API bearer token first using !set_twitter_token'])
+       } else if (status !== "authenticated") {
+         setOutput(prev => [...prev, 'Please authenticate with Twitter first using !twitter_auth'])
        } else {
          const tweetContent = args.join(' ')
          try {
-           const result = await postTweet(twitterToken, tweetContent)
+           const result = await postTweet(session.accessToken as string, tweetContent)
            setOutput(prev => [...prev, `Tweet posted successfully! Tweet ID: ${result.data.id}`])
          } catch (error) {
            console.error('Error posting tweet:', error)
-           let errorMessage = 'Error posting tweet. Please check your Twitter API token and ensure it has the necessary permissions.'
+           let errorMessage = 'Error posting tweet. Please check your Twitter authentication and ensure it has the necessary permissions.'
            if (error instanceof Error) {
              errorMessage += ` Details: ${error.message}`
            }
            setOutput(prev => [...prev, errorMessage])
          }
        }
+       break;
+     case '!twitter_auth':
+       if (status === "authenticated") {
+         setOutput(prev => [...prev, 'You are already authenticated with Twitter.'])
+       } else {
+         await signIn('twitter')
+         setOutput(prev => [...prev, 'Twitter authentication initiated. Please complete the process in the popup window.'])
+       }
        break
+
 
      default:
        const analysis = await handleOpenAIQuery(command, 'default');
@@ -363,6 +364,25 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
                  <Wallet className="w-4 h-4 mr-2" />
                  {isWalletConnected ? 'Connected' : 'Connect Wallet'}
                </Button>
+               {status === "authenticated" ? (
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   onClick={() => signOut()}
+                   className="text-purple-300 border-purple-500/50"
+                 >
+                   Disconnect Twitter
+                 </Button>
+               ) : (
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   onClick={() => signIn('twitter')}
+                   className="text-purple-300 border-purple-500/50"
+                 >
+                   Connect Twitter
+                 </Button>
+               )}
                <Button variant="ghost" size="icon" onClick={onClose}>
                  <X className="w-5 h-5 text-purple-300" />
                </Button>
