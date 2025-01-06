@@ -6,6 +6,10 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: Request) {
+  if (!process.env.OPENAI_API_KEY) {
+    return NextResponse.json({ error: 'OpenAI API key is not configured' }, { status: 500 });
+  }
+
   try {
     const { prompt } = await req.json();
 
@@ -14,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const completion = await openai.completions.create({
-      model: 'text-davinci-002',
+      model: 'gpt-3.5-turbo-instruct',
       prompt: prompt,
       max_tokens: 150,
       temperature: 0.6,
