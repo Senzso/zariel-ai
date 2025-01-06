@@ -14,6 +14,7 @@ export async function checkTwitterUsername(username: string) {
     return { error: 'An unknown error occurred' };
   }
 }
+
 export async function setTwitterToken(token: string): Promise<void> {
   // This function doesn't need to do anything as we're storing the token in the component state
   // It's here for consistency and potential future use
@@ -28,10 +29,12 @@ export async function postTweet(token: string, message: string) {
     body: JSON.stringify({ token, message }),
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to post tweet');
+    console.error('Error posting tweet:', data);
+    throw new Error(data.error || 'Failed to post tweet');
   }
 
-  return await response.json();
+  return data;
 }

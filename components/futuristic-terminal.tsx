@@ -198,7 +198,11 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
             setOutput(prev => [...prev, `Tweet posted successfully! Tweet ID: ${result.data.id}`])
           } catch (error) {
             console.error('Error posting tweet:', error)
-            setOutput(prev => [...prev, `Error posting tweet: ${error.message}`])
+            setOutput(prev => [
+              ...prev,
+              `Error posting tweet: ${error.message}`,
+              'Please check your Twitter API token and ensure it has the necessary permissions.'
+            ])
           }
         }
         break
