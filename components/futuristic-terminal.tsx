@@ -2,31 +2,25 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Send, Mic, Loader2, Wallet, Settings } from 'lucide-react'
+import { X, Send, Mic, Loader2, Wallet } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Keypair } from '@solana/web3.js'
-import { CredentialManager } from './credential-manager'
+import { getSolPrice, getTokenInfo, getTokenVolume, checkBalance, getNetworkStatus } from '@/utils/solana'
 
 const WELCOME_MESSAGE = `Welcome to Zariel AI Terminal!
 Type !help for a list of available commands.`
 
 const HELP_MESSAGE = `Available commands:
-!socialmedia - Manage social media accounts
-!smartcontract - Analyze smart contracts
-!market - Get market analysis and trends
-!wallet - Wallet operations (generate, connect, balance)
-!volume - Check token volume
-!price - Check token prices
-!content - Generate AI-powered content
-!sentiment - Analyze social sentiment
-!trade - Access trading features
-!network - Check Solana network status
-!bundler - Transaction bundling operations
-!security - Security analysis tools
+!sol_price - Get current SOL price
+!check_balance [address] - Check SOL balance
+!network_status - Get Solana network status
+!gen_wallet - Generate a new SOL wallet
+!volume [token_address] - Check token volume and price
+!token_info [token_address] - Get token information
+!connect - Connect Phantom wallet
 !help - Show this help message
-!credentials - Manage your credentials
 
 For any other queries, just type your question and I'll assist you.`
 
@@ -37,7 +31,6 @@ export function FuturisticTerminal({ isOpen, onClose }) {
   const [isRecording, setIsRecording] = useState(false)
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [showCredentialManager, setShowCredentialManager] = useState(false)
   const recognitionRef = useRef<any>(null)
   const outputRef = useRef<HTMLDivElement>(null)
 
@@ -55,77 +48,87 @@ export function FuturisticTerminal({ isOpen, onClose }) {
       return
     }
 
-    // Add a new command to show the credential manager
-    if (commandInput === '!credentials') {
-      setShowCredentialManager(true)
+    if (commandInput === '!sol_price') {
+      const response = await getSolPrice()
+      setOutput(prev => [...prev, response])
       return
     }
 
-    // Implement basic responses for each command
-    switch (commandInput.split(' ')[0]) {
-      case '!socialmedia':
-        setOutput(prev => [...prev, "Social media management features are coming soon."])
-        break
-      case '!smartcontract':
-        setOutput(prev => [...prev, "Smart contract analysis tools are in development."])
-        break
-      case '!market':
-        setOutput(prev => [...prev, "Market analysis features will be available shortly."])
-        break
-      case '!wallet':
-        handleWalletOperations(commandInput)
-        break
-      case '!volume':
-        setOutput(prev => [...prev, "Volume checking functionality is being implemented."])
-        break
-      case '!price':
-        setOutput(prev => [...prev, "Price checking features are coming soon."])
-        break
-      case '!content':
-        setOutput(prev => [...prev, "AI-powered content generation is under development."])
-        break
-      case '!sentiment':
-        setOutput(prev => [...prev, "Sentiment analysis tools are being fine-tuned."])
-        break
-      case '!trade':
-        setOutput(prev => [...prev, "Trading features will be available in the next update."])
-        break
-      case '!network':
-        setOutput(prev => [...prev, "Solana network status checking is coming soon."])
-        break
-      case '!bundler':
-        setOutput(prev => [...prev, "Transaction bundling operations are in development."])
-        break
-      case '!security':
-        setOutput(prev => [...prev, "Security analysis tools are being implemented."])
-        break
-      default:
-        // If no command matches, send to OpenAI
-        await handleOpenAIQuery(command)
-    }
-  }
-
-  const handleWalletOperations = (command: string) => {
-    const parts = command.split(' ')
-    if (parts.length === 1) {
-      setOutput(prev => [...prev, "Available wallet operations: generate, connect, balance"])
-    } else {
-      switch (parts[1]) {
-        case 'generate':
-          const newWallet = Keypair.generate()
-          const publicKey = newWallet.publicKey.toString()
-          setOutput(prev => [...prev, `New wallet generated. Public Key: ${publicKey}`])
-          break
-        case 'connect':
-          connectPhantomWallet()
-          break
-        case 'balance':
-          setOutput(prev => [...prev, "Balance checking feature is coming soon."])
-          break
-        default:
-          setOutput(prev => [...prev, "Unknown wallet operation. Try 'generate', 'connect', or 'balance'."])
+    if (commandInput.startsWith('!check_balance')) {
+      const address = command.substring('!check_balance'.length).trim()
+      if (!address) {
+        setOutput(prev => [...prev, 'Please provide a wallet address'])
+        return
       }
+      const response = await checkBalance(address)
+      setOutput(prev => [...prev, response])
+      return
     }
+
+    if (commandInput === '!network_status') {
+      const response = await getNetworkStatus()
+      setOutput(prev => [...prev, response])
+      return
+    }
+
+    if (commandInput === '!gen_wallet') {
+      const newWallet = Keypair.generate()
+      const publicKey = newWallet.publicKey.toString()
+      const privateKey = Buffer.from(newWallet.secretKey).toString('hex')
+      setOutput(prev => [...prev,
+        'New wallet generated:',
+        `Public Key: ${publicKey}`,
+        `Private Key: ${privateKey}`,
+        'IMPORTANT: Save your private key securely. It will not be shown again.'])
+      return
+    }
+
+    if (commandInput.startsWith('!volume')) {
+      const address = command.substring('!volume'.length).trim()
+      if (!address) {
+        setOutput(prev => [...prev, 'Please provide a token address'])
+        return
+      }
+      const volumeData = await getTokenVolume(address)
+      if (volumeData) {
+        setOutput(prev => [...prev,
+          `Token: ${volumeData.symbol}`,
+          `24h Volume: $${parseFloat(volumeData.volume24h).toLocaleString()}`,
+          `Price: $${parseFloat(volumeData.priceUsdt).toFixed(6)}`
+        ])
+      } else {
+        setOutput(prev => [...prev, 'Error fetching token volume data'])
+      }
+      return
+    }
+
+    if (commandInput.startsWith('!token_info')) {
+      const address = command.substring('!token_info'.length).trim()
+      if (!address) {
+        setOutput(prev => [...prev, 'Please provide a token address'])
+        return
+      }
+      const tokenInfo = await getTokenInfo(address)
+      if (tokenInfo) {
+        setOutput(prev => [...prev,
+          `Token Name: ${tokenInfo.name}`,
+          `Symbol: ${tokenInfo.symbol}`,
+          `Decimals: ${tokenInfo.decimals}`,
+          `Total Supply: ${tokenInfo.supply}`
+        ])
+      } else {
+        setOutput(prev => [...prev, 'Error fetching token information'])
+      }
+      return
+    }
+
+    if (commandInput === '!connect') {
+      await connectPhantomWallet()
+      return
+    }
+
+    // If no command matches, send to OpenAI
+    await handleOpenAIQuery(command)
   }
 
   const handleSend = async (text: string) => {
@@ -253,15 +256,6 @@ export function FuturisticTerminal({ isOpen, onClose }) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowCredentialManager(true)}
-                  className="text-purple-300 border-purple-500/50"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Credentials
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
                   onClick={connectPhantomWallet}
                   disabled={isWalletConnected}
                   className="text-purple-300 border-purple-500/50"
@@ -274,50 +268,44 @@ export function FuturisticTerminal({ isOpen, onClose }) {
                 </Button>
               </div>
             </div>
-            {showCredentialManager ? (
-              <CredentialManager />
-            ) : (
-              <>
-                <div ref={outputRef} className="h-80 p-4 overflow-y-auto font-mono text-sm text-purple-300/90 space-y-2">
-                  {output.map((line, index) => (
-                    <div key={index} style={{ whiteSpace: 'pre-wrap' }}>{line}</div>
-                  ))}
-                  {isProcessing && <div className="text-purple-300/90">Processing...</div>}
-                </div>
-                <div className="p-4 border-t border-purple-500/30 flex items-center gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Enter your command..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className="flex-grow bg-purple-500/10 border-purple-500/30 text-purple-200"
-                    onKeyPress={(e) => e.key === 'Enter' && !isProcessing && handleSend(input)}
-                    disabled={isProcessing}
-                  />
-                  <Button 
-                    onClick={() => handleSend(input)} 
-                    className="bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50"
-                    disabled={isProcessing}
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                  <div className="relative group">
-                    <Button
-                      onClick={isRecording ? stopRecording : startRecording}
-                      className={`bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50 ${isRecording ? 'animate-pulse' : ''}`}
-                      disabled={isProcessing}
-                    >
-                      {isRecording ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Mic className="w-4 h-4 mr-2" />
-                      )}
-                      {isRecording ? 'Recording...' : 'Voice'}
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
+            <div ref={outputRef} className="h-80 p-4 overflow-y-auto font-mono text-sm text-purple-300/90 space-y-2">
+              {output.map((line, index) => (
+                <div key={index} style={{ whiteSpace: 'pre-wrap' }}>{line}</div>
+              ))}
+              {isProcessing && <div className="text-purple-300/90">Processing...</div>}
+            </div>
+            <div className="p-4 border-t border-purple-500/30 flex items-center gap-2">
+              <Input
+                type="text"
+                placeholder="Enter your command..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="flex-grow bg-purple-500/10 border-purple-500/30 text-purple-200"
+                onKeyPress={(e) => e.key === 'Enter' && !isProcessing && handleSend(input)}
+                disabled={isProcessing}
+              />
+              <Button 
+                onClick={() => handleSend(input)} 
+                className="bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50"
+                disabled={isProcessing}
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+              <div className="relative group">
+                <Button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 border border-purple-500/50 ${isRecording ? 'animate-pulse' : ''}`}
+                  disabled={isProcessing}
+                >
+                  {isRecording ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Mic className="w-4 h-4 mr-2" />
+                  )}
+                  {isRecording ? 'Recording...' : 'Voice'}
+                </Button>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       )}

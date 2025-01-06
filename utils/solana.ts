@@ -1,25 +1,19 @@
-const API_BASE = '/api/solscan';
+const SOLSCAN_API_BASE = 'https://public-api.solscan.io';
 
 export async function getSolPrice() {
   try {
-    const response = await fetch(`${API_BASE}?endpoint=/market/token/SOL`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch SOL price');
-    }
+    const response = await fetch(`${SOLSCAN_API_BASE}/market/token/SOL`);
     const data = await response.json();
     return `SOL Price: $${parseFloat(data.priceUsdt).toFixed(2)}`;
   } catch (error) {
     console.error('Error fetching SOL price:', error);
-    return 'Error fetching SOL price. Please try again later.';
+    return 'Error fetching SOL price';
   }
 }
 
 export async function getTokenInfo(address: string) {
   try {
-    const response = await fetch(`${API_BASE}?endpoint=/token/meta?tokenAddress=${address}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch token info');
-    }
+    const response = await fetch(`${SOLSCAN_API_BASE}/token/meta?token=${address}`);
     const data = await response.json();
     return data;
   } catch (error) {
@@ -30,10 +24,7 @@ export async function getTokenInfo(address: string) {
 
 export async function getTokenVolume(address: string) {
   try {
-    const response = await fetch(`${API_BASE}?endpoint=/market/token/${address}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch token volume');
-    }
+    const response = await fetch(`${SOLSCAN_API_BASE}/market/token/${address}`);
     const data = await response.json();
     return {
       volume24h: data.volume24h,
@@ -48,29 +39,23 @@ export async function getTokenVolume(address: string) {
 
 export async function checkBalance(address: string) {
   try {
-    const response = await fetch(`${API_BASE}?endpoint=/account/${address}`);
-    if (!response.ok) {
-      throw new Error('Failed to check balance');
-    }
+    const response = await fetch(`${SOLSCAN_API_BASE}/account/${address}`);
     const data = await response.json();
-    return `Balance: ${(data.lamports / 1e9).toFixed(9)} SOL`;
+    return `Balance: ${data.lamports / 1e9} SOL`;
   } catch (error) {
     console.error('Error checking balance:', error);
-    return 'Error checking balance. Please try again later.';
+    return 'Error checking balance';
   }
 }
 
 export async function getNetworkStatus() {
   try {
-    const response = await fetch(`${API_BASE}?endpoint=/chaininfo`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch network status');
-    }
+    const response = await fetch(`${SOLSCAN_API_BASE}/chaininfo`);
     const data = await response.json();
     return `Network Status: ${data.status}\nBlock Height: ${data.blockHeight}`;
   } catch (error) {
     console.error('Error fetching network status:', error);
-    return 'Error fetching network status. Please try again later.';
+    return 'Error fetching network status';
   }
 }
 
