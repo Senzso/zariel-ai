@@ -57,9 +57,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-black/90 text-white">
+    <div className="min-h-screen bg-transparent text-white">
+      <div className="fixed inset-0 bg-black/90 z-0" />
       <AsciiPattern />
-      
       <AnimatePresence mode="wait">
         {!entered ? (
           <motion.div
@@ -191,8 +191,8 @@ function MainContent({ overviewRef, featuresRef, docsRef, scrollToSection, isTer
 
 function Hero({ setIsTerminalOpen }) {
   return (
-    <section className="text-center space-y-8">
-      <div className="p-8 rounded-lg backdrop-blur-sm">
+    <section className="text-center space-y-8 relative z-10">
+      <div className="p-8 rounded-lg">
         <div className="space-y-6">
           <h1 className="text-6xl font-mono font-bold tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-purple-200 to-purple-300">
