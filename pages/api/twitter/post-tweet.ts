@@ -21,17 +21,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({ text: message }),
     })
 
+    const data = await response.json()
+
     if (!response.ok) {
-      const errorData = await response.json()
-      console.error('Twitter API error:', errorData)
+      console.error('Twitter API error:', data)
       return res.status(response.status).json({
         error: 'Failed to post tweet',
-        details: errorData,
+        details: data,
         status: response.status
       })
     }
 
-    const data = await response.json()
     return res.status(200).json(data)
   } catch (error) {
     console.error('Error posting tweet:', error)
