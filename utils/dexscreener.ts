@@ -20,7 +20,7 @@ Price: $${pair.priceUsd}
 24h Volume: $${pair.volume.h24}
 Market Cap: $${pair.fdv}
 Liquidity: $${pair.liquidity.usd}
-Holders: Data not available from DexScreener API
+Note: Always conduct thorough research before investing. Low liquidity and market cap may indicate higher risk.
     `.trim();
   } catch (error) {
     console.error('Error fetching token profile:', error);
@@ -48,6 +48,7 @@ Price: $${pair.priceUsd}
 Liquidity: $${pair.liquidity.usd}
 Volume 24h: $${pair.volume.h24}
 Market Cap: $${pair.fdv}
+Note: Always conduct thorough research before investing. Low liquidity and market cap may indicate higher risk.
     `.trim();
   } catch (error) {
     console.error('Error fetching pair info:', error);
@@ -72,6 +73,7 @@ Price: $${pair.priceUsd}
 24h Volume: $${pair.volume.h24}
 Liquidity: $${pair.liquidity.usd}
 Market Cap: $${pair.fdv}
+Note: Always conduct thorough research before investing. Low liquidity and market cap may indicate higher risk.
     `.trim();
   } catch (error) {
     console.error('Error fetching token orders:', error);

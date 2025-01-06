@@ -19,8 +19,14 @@ export async function GET(request: Request) {
     
     // Format the data as a simple text
     let formattedData = `Twitter Username History for @${username}:\n\n`;
-    for (const [date, handle] of Object.entries(data)) {
-      formattedData += `${date}: @${handle}\n`;
+    if (data.accounts && data.accounts.length > 0) {
+      const account = data.accounts[0];
+      const screenNames = account.screen_names;
+      for (const [screenName, dates] of Object.entries(screenNames)) {
+        formattedData += `@${screenName}: ${dates.join(', ')}\n`;
+      }
+    } else {
+      formattedData += 'No history found for this username.';
     }
 
     return NextResponse.json({ formattedData });

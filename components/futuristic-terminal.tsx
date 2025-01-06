@@ -205,7 +205,7 @@ export function FuturisticTerminal({ isOpen, onClose, onOpen, shouldSpeak, setSh
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          prompt: `Analyze the following token information, focusing on liquidity, market cap, volume, and price action. If available, comment on the distribution of top holders. ${query}` 
+          prompt: `Analyze the following token information, focusing on providing a short summary of what the coin is about. Based on the market cap and liquidity, determine the odds of the token being a rug pull or scam. Consider low liquidity and small market cap as potential red flags. ${query}` 
         }),
       });
 
