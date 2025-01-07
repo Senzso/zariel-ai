@@ -400,7 +400,7 @@ function TerminalDemo() {
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4" />
               <span className="text-purple-400">$</span>
-              <span className="typing-animation">zariel analyze-contract 0x742d35Cc6634C0532925a3b844Bc454e4438f44e</span>
+              <span className="typing-animation">zariel analyze-contract BeGY8KqKxboEwRbJd1q9H2K829jS4Rc5dEyNMYXCbV5p</span>
             </div>
             <div className="text-purple-300/70 pl-6">
               {'>'} Analyzing smart contract...<br />
