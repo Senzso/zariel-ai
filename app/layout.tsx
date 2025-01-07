@@ -9,6 +9,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+      <title>ZarielAI - Your very own AI voice assistant</title>
+
       <link rel="icon" href="/icon.png" />
 
         <Script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@latest" strategy="beforeInteractive" />
