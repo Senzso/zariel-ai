@@ -193,12 +193,7 @@ function Hero({ setIsTerminalOpen }) {
   return (
     <section className="text-center space-y-8 relative z-10">
       <div className="p-8 rounded-lg">
-      <div className="flex items-center justify-center space-x-2 mb-4">
-          <span className="text-sm font-mono text-purple-300/80">CA: Not launched yet</span>
-          <a href="https://x.com/zarielaisol" target="_blank" rel="noopener noreferrer">
-            <Twitter className="w-4 h-4 text-purple-300 hover:text-purple-100 transition-colors" />
-          </a>
-        </div>
+        
         <div className="space-y-6">
           <h1 className="text-6xl font-mono font-bold tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-purple-200 to-purple-300">
@@ -207,7 +202,7 @@ function Hero({ setIsTerminalOpen }) {
           </h1>
           <p className="text-xl text-purple-300/80 max-w-2xl mx-auto font-mono">
             Control blockchain operations and social media automation with natural voice commands
-          <br>CA: NOT LAUNCHED YET.</br>
+          <br> <br>CA: NOT LAUNCHED YET.</br></br>
           </p>
         </div>
 

@@ -9,7 +9,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-      <title>ZarielAI - Your very own AI voice assistant</title>
+      <title>ZarielAI - Your Very Own AI Voice Assistant</title>
 
       <link rel="icon" href="/icon.png" />
 
