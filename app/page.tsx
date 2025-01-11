@@ -136,7 +136,7 @@ function MainContent({ overviewRef, featuresRef, docsRef, scrollToSection, isTer
     <div className="min-h-screen">
       <header className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-sm border-b border-purple-300/10">
         <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <span className="text-lg font-mono text-purple-300">ZARIEL.AI</span>
+          <span className="text-lg font-mono text-purple-300">ZARIEL AI</span>
           <div className="flex items-center gap-6">
             <Button
               variant="ghost"
@@ -194,7 +194,7 @@ function Hero({ setIsTerminalOpen }) {
     <section className="text-center space-y-8 relative z-10">
       <div className="p-8 rounded-lg">
         <div className="flex items-center justify-center space-x-2 mb-4">
-          <span className="text-sm font-mono text-purple-300/80">CA: Not launched yet</span>
+          <span className="text-sm font-mono text-purple-300/80">CA: Not launched yet!</span>
           <a href="https://x.com/zarielaisol" target="_blank" rel="noopener noreferrer">
             <Twitter className="w-4 h-4 text-purple-300 hover:text-purple-100 transition-colors" />
           </a>
