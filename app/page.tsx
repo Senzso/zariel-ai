@@ -136,7 +136,7 @@ function MainContent({ overviewRef, featuresRef, docsRef, scrollToSection, isTer
     <div className="min-h-screen">
       <header className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-sm border-b border-purple-300/10">
         <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <span className="text-lg font-mono text-purple-300">ZARIEL AI</span>
+          <span className="text-lg font-mono text-purple-300">ZARIEL_AI</span>
           <div className="flex items-center gap-6">
             <Button
               variant="ghost"
