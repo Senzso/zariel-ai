@@ -194,7 +194,7 @@ function Hero({ setIsTerminalOpen }) {
     <section className="text-center space-y-8 relative z-10">
       <div className="p-8 rounded-lg">
         <div className="flex items-center justify-center space-x-2 mb-4">
-          <span className="text-sm font-mono text-purple-300/80">CA: Not launched yet!</span>
+          <span className="text-sm font-mono text-purple-300/80">CA: 7zqrMqEifCqc2ydbcxL1J1FRWsFWFW58f5XdsYsApump</span>
           <a href="https://x.com/zarielaisol" target="_blank" rel="noopener noreferrer">
             <Twitter className="w-4 h-4 text-purple-300 hover:text-purple-100 transition-colors" />
           </a>
